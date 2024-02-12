@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -31,14 +32,15 @@ public class Server implements Runnable {
             this.serverSocket = new ServerSocket(2007);
             this.clientThreadPool = Executors.newCachedThreadPool();
             this.starteKonsole();
+            System.out.println("Server gestartet...");
             while (this.serverAn) {
                 Socket neuerClient = this.serverSocket.accept();
                 ClientHandler neuerClientHandler = new ClientHandler(neuerClient);
                 this.verbundeneClients.add(neuerClientHandler);
                 this.clientThreadPool.execute(neuerClientHandler);
             }
-        } catch (IOException e) {
-            // TODO: Handle IOException
+        } catch (Exception e) {
+            herunterfahren("Server abgestürzt --> " + Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -74,7 +76,6 @@ public class Server implements Runnable {
         /*
         Die Klasse Konsole bietet auf Serverebene eine kleine Eingabestelle für den Administrator
          */
-        private boolean serverAn;
         private BufferedReader eingabeReader;
 
         public Konsole() {
@@ -83,7 +84,7 @@ public class Server implements Runnable {
 
         @Override
         public void run() {
-            while (this.serverAn) {
+            while (serverAn) {
                 try {
                     String eingegebenerBefehl = this.eingabeReader.readLine();
                     // Den Befehl aus der Konsole verarbeiten
@@ -94,12 +95,14 @@ public class Server implements Runnable {
                             ClientHandler clientZuKicken = verbundeneClients.get(verwendeteNicks.indexOf(nickname));
                             clientZuKicken.sendeNachricht("[ADMIN] Deine Verbindung wurde durch einen Administrator geschlossen.");
                             clientZuKicken.verbindungSchliessen();
+                        } else {
+                            System.out.println("Nickname ist nicht verbunden!");
                         }
                     } else if (eingegebenerBefehl.equals("herunterfahren")) {
                         herunterfahren("Server wurde von einem Administrator heruntergefahren.");
-                        this.serverAn = false;
+                        serverAn = false;
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     // Ignorieren
                 }
             }
@@ -174,5 +177,10 @@ public class Server implements Runnable {
                 }
             }
         }
+    }
+
+    public static void main(String[] args) {
+        Server server = new Server();
+        server.run();
     }
 }
