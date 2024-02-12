@@ -8,7 +8,6 @@ public class RSAHandler {
         Diese Klasse erstellt die Schlüsselpaare für die Verschlüsselung des Chatrooms
          */
         public int[] erstelleSchluesselPaar() {
-            // TODO: implementieren
             int p = generierePrimzahl(128);
             int q = generierePrimzahl(128);
             long n = (long) p * q;
