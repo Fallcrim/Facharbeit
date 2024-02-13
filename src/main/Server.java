@@ -1,3 +1,5 @@
+package main;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,7 +13,7 @@ import java.util.concurrent.Executors;
 
 public class Server implements Runnable {
     /**
-     * Die Server Klasse, die den Server definiert, der alle Client Instanzen miteinander verbindet
+     * Die main.Server Klasse, die den main.Server definiert, der alle main.Client Instanzen miteinander verbindet
      */
 
     private ServerSocket serverSocket;
@@ -32,7 +34,7 @@ public class Server implements Runnable {
             this.serverSocket = new ServerSocket(2007);
             this.clientThreadPool = Executors.newCachedThreadPool();
             this.starteKonsole();
-            System.out.println("Server gestartet...");
+            System.out.println("main.Server gestartet...");
             while (this.serverAn) {
                 Socket neuerClient = this.serverSocket.accept();
                 ClientHandler neuerClientHandler = new ClientHandler(neuerClient);
@@ -40,7 +42,7 @@ public class Server implements Runnable {
                 this.clientThreadPool.execute(neuerClientHandler);
             }
         } catch (Exception e) {
-            herunterfahren("Server abgestürzt --> " + Arrays.toString(e.getStackTrace()));
+            herunterfahren("main.Server abgestürzt --> " + Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -61,7 +63,7 @@ public class Server implements Runnable {
         if (!this.serverSocket.isClosed()) {
             try {
                 this.serverAn = false;
-                this.sendeAnAlle("Der Server wird heruntergefahren. Grund: " + pGrund);
+                this.sendeAnAlle("Der main.Server wird heruntergefahren. Grund: " + pGrund);
                 for (ClientHandler alleClients : this.verbundeneClients) {
                     alleClients.verbindungSchliessen();
                 }
@@ -99,7 +101,7 @@ public class Server implements Runnable {
                             System.out.println("Nickname ist nicht verbunden!");
                         }
                     } else if (eingegebenerBefehl.equals("herunterfahren")) {
-                        herunterfahren("Server wurde von einem Administrator heruntergefahren.");
+                        herunterfahren("main.Server wurde von einem Administrator heruntergefahren.");
                         serverAn = false;
                     }
                 } catch (Exception e) {
@@ -166,8 +168,8 @@ public class Server implements Runnable {
         public void verbindungSchliessen() {
             if (!this.verbundenerClient.isClosed()) {
                 try {
-                    this.ausgehend.println("SIG%TERM"); // bringt den Client dazu, die Verbindung auf seiner Seite zu schließen
-                    // Schließen des Client Sockets & der In-/Output-Streams
+                    this.ausgehend.println("SIG%TERM"); // bringt den main.Client dazu, die Verbindung auf seiner Seite zu schließen
+                    // Schließen des main.Client Sockets & der In-/Output-Streams
                     this.verbundenerClient.close();
                     this.eingehend.close();
                     this.ausgehend.close();
