@@ -10,8 +10,8 @@ public class RSAHandler {
         Diese Klasse erstellt die Schlüsselpaare für die Verschlüsselung des Chatrooms
          */
         private BigInteger[] erstelleSchluesselPaar(int pLaengeInBits) {
-            BigInteger p = generierePrimzahl(pLaengeInBits);
-            BigInteger q = generierePrimzahl(pLaengeInBits);
+            BigInteger p = zufaelligePrimzahl(pLaengeInBits);
+            BigInteger q = zufaelligePrimzahl(pLaengeInBits);
             BigInteger n = p.multiply(q);
             // Eulers Totalitätsfunktion
             BigInteger phiN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
@@ -21,39 +21,48 @@ public class RSAHandler {
             return new BigInteger[]{oeffentlicherSchluessel, privaterSchluessel, n};
         }
 
+        private BigInteger zufaelligePrimzahl(int pBitLaenge) {
+            Random generator = new Random();
+            BigInteger primzahl = BigInteger.probablePrime(pBitLaenge, generator);
+            while (!istPrimzahl(primzahl)) {
+                primzahl = BigInteger.probablePrime(pBitLaenge, generator);
+            }
+            return primzahl;
+        }
+
         public BigInteger zufaelligerBigInteger(BigInteger min, BigInteger max) {
             Random generator = new Random();
             BigInteger ergebnis = new BigInteger(max.bitLength(), generator);
-            while (ergebnis.compareTo(min) >= 0) {
+            while (ergebnis.compareTo(max) >= 0) {
                 ergebnis = new BigInteger(max.bitLength(), generator);
             }
             return ergebnis;
         }
 
-        private BigInteger generierePrimzahl(int pLaengeInBits) {
-            /*
-            Generiert eine Primzahl mit der Länge von pLaengeBits
-             */
-            while (true) {
-                BigInteger zufaelligeZahl = zufaelligeNBitLangeZahl(BigInteger.valueOf(pLaengeInBits));
-                if (istPrimzahl(zufaelligeZahl)) {
-                    return zufaelligeZahl;
-                }
-            }
-        }
+//        private BigInteger generierePrimzahl(int pLaengeInBits) {
+//            /*
+//            Generiert eine Primzahl mit der Länge von pLaengeBits
+//             */
+//            while (true) {
+//                BigInteger zufaelligeZahl = zufaelligeNBitLangeZahl(BigInteger.valueOf(pLaengeInBits));
+//                if (istPrimzahl(zufaelligeZahl)) {
+//                    return zufaelligeZahl;
+//                }
+//            }
+//        }
 
         private BigInteger moduloBigInteger(BigInteger a, int b) {
             return a.mod(BigInteger.valueOf(b));
         }
 
-        private BigInteger zufaelligeNBitLangeZahl(BigInteger pN) {
-        /*
-        Erstellt eine zufällige Zahl mit der Länge von pN Bits
-         */
-            BigInteger max = BigInteger.TWO.pow(pN.intValue());
-            BigInteger min = BigInteger.TWO.pow(pN.subtract(BigInteger.ONE).intValue()).add(BigInteger.ONE);
-            return zufaelligerBigInteger(min, max);
-        }
+//        private BigInteger zufaelligeNBitLangeZahl(BigInteger pN) {
+//        /*
+//        Erstellt eine zufällige Zahl mit der Länge von pN Bits
+//         */
+//            BigInteger max = BigInteger.TWO.pow(pN.intValue());
+//            BigInteger min = BigInteger.TWO.pow(pN.subtract(BigInteger.ONE).intValue()).add(BigInteger.ONE);
+//            return zufaelligerBigInteger(min, max);
+//        }
 
         private boolean istPrimzahl(BigInteger pZahl) {
         /*

@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 
 public class Server implements Runnable {
     /**
-     * Die main.Server Klasse, die den main.Server definiert, der alle main.Client Instanzen miteinander verbindet
+     * Die Server Klasse, die den Server definiert, der alle Client Instanzen miteinander verbindet
      */
 
     private ServerSocket serverSocket;
