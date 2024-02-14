@@ -14,7 +14,7 @@ public class RSAHandler {
             BigInteger q = generierePrimzahl(pLaengeInBits);
             BigInteger n = p.multiply(q);
             // Eulers Totalitätsfunktion
-            BigInteger phiN = p.subtract(BigInteger.valueOf(1)).multiply(q.subtract(BigInteger.valueOf(1)));
+            BigInteger phiN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
             BigInteger oeffentlicherSchluessel = generiereOeffentlichenSchluessel(phiN);
             BigInteger privaterSchluessel = generierePrivatenSchluessel(oeffentlicherSchluessel, phiN);
 
@@ -72,14 +72,6 @@ public class RSAHandler {
                 }
             }
             return true;
-        }
-
-        private long groessterGemeinsamerTeiler(long a, long b) {
-            /*
-            Ermittelt den ggT von a und b
-             */
-            if (b == 0) return a;
-            return groessterGemeinsamerTeiler(b, a % b);
         }
 
         private BigInteger generiereOeffentlichenSchluessel(BigInteger pPhiN) {
