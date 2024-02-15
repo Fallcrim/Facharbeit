@@ -42,30 +42,9 @@ public class RSAHandler {
             return ergebnis;
         }
 
-//        private BigInteger generierePrimzahl(int pLaengeInBits) {
-//            /*
-//            Generiert eine Primzahl mit der Länge von pLaengeBits
-//             */
-//            while (true) {
-//                BigInteger zufaelligeZahl = zufaelligeNBitLangeZahl(BigInteger.valueOf(pLaengeInBits));
-//                if (istPrimzahl(zufaelligeZahl)) {
-//                    return zufaelligeZahl;
-//                }
-//            }
-//        }
-
         private BigInteger moduloBigInteger(BigInteger a, int b) {
             return a.mod(BigInteger.valueOf(b));
         }
-
-//        private BigInteger zufaelligeNBitLangeZahl(BigInteger pN) {
-//        /*
-//        Erstellt eine zufällige Zahl mit der Länge von pN Bits
-//         */
-//            BigInteger max = BigInteger.TWO.pow(pN.intValue());
-//            BigInteger min = BigInteger.TWO.pow(pN.subtract(BigInteger.ONE).intValue()).add(BigInteger.ONE);
-//            return zufaelligerBigInteger(min, max);
-//        }
 
         private boolean istPrimzahl(BigInteger pZahl) {
         /*
