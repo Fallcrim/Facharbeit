@@ -17,14 +17,13 @@ public class Server implements Runnable {
      */
 
     private ServerSocket serverSocket;
-    private ArrayList<ClientHandler> verbundeneClients;
-    private ArrayList<String> verwendeteNicks;
-    private ExecutorService clientThreadPool;
+    private final ArrayList<ClientHandler> verbundeneClients;
+    private final ArrayList<String> verwendeteNicks;
     private boolean serverAn;
 
     public Server() {
-        this.verbundeneClients = new ArrayList<ClientHandler>();
-        this.verwendeteNicks = new ArrayList<String>();
+        this.verbundeneClients = new ArrayList<>();
+        this.verwendeteNicks = new ArrayList<>();
         this.serverAn = true;
     }
 
@@ -32,14 +31,14 @@ public class Server implements Runnable {
     public void run() {
         try {
             this.serverSocket = new ServerSocket(2007);
-            this.clientThreadPool = Executors.newCachedThreadPool();
+            ExecutorService clientThreadPool = Executors.newCachedThreadPool();
             this.starteKonsole();
             System.out.println("main.Server gestartet...");
             while (this.serverAn) {
                 Socket neuerClient = this.serverSocket.accept();
                 ClientHandler neuerClientHandler = new ClientHandler(neuerClient);
                 this.verbundeneClients.add(neuerClientHandler);
-                this.clientThreadPool.execute(neuerClientHandler);
+                clientThreadPool.execute(neuerClientHandler);
             }
         } catch (Exception e) {
             herunterfahren("main.Server abgestürzt --> " + Arrays.toString(e.getStackTrace()));
@@ -69,7 +68,7 @@ public class Server implements Runnable {
                 }
                 this.serverSocket.close();
             } catch (IOException e) {
-                return;
+                // ignorieren
             }
         }
     }
@@ -78,7 +77,7 @@ public class Server implements Runnable {
         /*
         Die Klasse Konsole bietet auf Serverebene eine kleine Eingabestelle für den Administrator
          */
-        private BufferedReader eingabeReader;
+        private final BufferedReader eingabeReader;
 
         public Konsole() {
             this.eingabeReader = new BufferedReader(new InputStreamReader(System.in));
@@ -113,10 +112,9 @@ public class Server implements Runnable {
 
     private class ClientHandler implements Runnable {
 
-        private Socket verbundenerClient;
+        private final Socket verbundenerClient;
         private BufferedReader eingehend;
         private PrintWriter ausgehend;
-        private String clientNickname;
 
         public ClientHandler(Socket pVerbundenerClient) {
             this.verbundenerClient = pVerbundenerClient;
@@ -130,20 +128,20 @@ public class Server implements Runnable {
 
                 // Frage den client nach seinem gewünschten Nickname/Akronym
                 this.ausgehend.println("NICK");
-                this.clientNickname = this.nicknameAnpassen(this.eingehend.readLine());
-                if (verwendeteNicks.contains(this.clientNickname)) {
+                String clientNickname = this.nicknameAnpassen(this.eingehend.readLine());
+                if (verwendeteNicks.contains(clientNickname)) {
                     ausgehend.println("ERR%Nickname bereits in Verwendung! Wähle einen neuen.");
                     this.verbindungSchliessen();
                 }
-                System.out.println(this.clientNickname + " wurde mit dem Chat verbunden!");
+                System.out.println(clientNickname + " wurde mit dem Chat verbunden!");
                 // Kündige den neuen Benutzer im Chat an
-                sendeAnAlle(this.clientNickname + " ist dem Chat beigetreten.");
+                sendeAnAlle(clientNickname + " ist dem Chat beigetreten.");
                 // Verarbeite neue Nachrichten des verbundenen Benutzers
                 String neueNachricht = this.eingehend.readLine();
                 while (neueNachricht != null) {
                     if (neueNachricht.equals("/quit")) { // Befehl, wenn der Nutzer den Chat verlässt
                         this.verbindungSchliessen();
-                        sendeAnAlle(this.clientNickname + " hat den Chat verlassen.");
+                        sendeAnAlle(clientNickname + " hat den Chat verlassen.");
                         return;
                     } else {
                         sendeAnAlle(neueNachricht);
@@ -151,7 +149,7 @@ public class Server implements Runnable {
                     neueNachricht = this.eingehend.readLine();
                 }
             } catch (IOException e) {
-                // TODO: handle
+                // ignorieren
             }
         }
 
