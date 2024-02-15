@@ -13,10 +13,13 @@ public class RSAHandler {
             BigInteger p = zufaelligePrimzahl(pLaengeInBits);
             BigInteger q = zufaelligePrimzahl(pLaengeInBits);
             BigInteger n = p.multiply(q);
+
             // Eulers Totalitätsfunktion
             BigInteger phiN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+
+            // Erstellung der Schlüssel
             BigInteger oeffentlicherSchluessel = generiereOeffentlichenSchluessel(phiN);
-            BigInteger privaterSchluessel = generierePrivatenSchluessel(oeffentlicherSchluessel, phiN);
+            BigInteger privaterSchluessel = oeffentlicherSchluessel.modInverse(phiN);
 
             return new BigInteger[]{oeffentlicherSchluessel, privaterSchluessel, n};
         }
@@ -33,7 +36,7 @@ public class RSAHandler {
         public BigInteger zufaelligerBigInteger(BigInteger min, BigInteger max) {
             Random generator = new Random();
             BigInteger ergebnis = new BigInteger(max.bitLength(), generator);
-            while (ergebnis.compareTo(max) >= 0) {
+            while (ergebnis.compareTo(max) >= 0 && ergebnis.compareTo(min) <= 0) {
                 ergebnis = new BigInteger(max.bitLength(), generator);
             }
             return ergebnis;
@@ -94,18 +97,6 @@ public class RSAHandler {
                 }
             }
         }
-
-        private BigInteger generierePrivatenSchluessel(BigInteger e, BigInteger pPhiN) {
-            /*
-            Generiert einen privaten Schlüssel für die Entschlüsselung von Nachrichten
-             */
-            while (true) {
-                BigInteger d = zufaelligerBigInteger(e.add(BigInteger.valueOf(1)), pPhiN);
-                if (d.gcd(pPhiN).equals(BigInteger.ONE)) {
-                    return d;
-                }
-            }
-        }
     }
 
     public String verschluesseln(String pNachricht, BigInteger pOeffentlicherSchluessel, BigInteger pN) {
@@ -115,8 +106,8 @@ public class RSAHandler {
         StringBuilder ausgabe = new StringBuilder();
         for (int i = 0; i < pNachricht.length(); i++) {
             char nvBuchstabe = pNachricht.charAt(i);
-            int nvBuchstabeASCII = (int) nvBuchstabe;
-            ausgabe.append((char) (BigInteger.valueOf(nvBuchstabeASCII).pow(pOeffentlicherSchluessel.intValue()).mod(pN)).intValue());
+            BigInteger vBuchstabe = BigInteger.valueOf(nvBuchstabe).modPow(pOeffentlicherSchluessel, pN);
+            ausgabe.append((char) vBuchstabe.intValue());
         }
         return ausgabe.toString();
     }
@@ -127,9 +118,9 @@ public class RSAHandler {
          */
         StringBuilder ausgabe = new StringBuilder();
         for (int i = 0; i < pVerschluesselteNachricht.length(); i++) {
-            char nvBuchstabe = pVerschluesselteNachricht.charAt(i);
-            int nvBuchstabeASCII = (int) nvBuchstabe;
-            ausgabe.append(BigInteger.valueOf(nvBuchstabeASCII).pow(pPrivaterSchluessel.intValue()).mod(pN).intValue());
+            char vBuchstabe = pVerschluesselteNachricht.charAt(i);
+            BigInteger nvBuchstabe = BigInteger.valueOf(vBuchstabe).modPow(pPrivaterSchluessel, pN);
+            ausgabe.append((char) nvBuchstabe.intValue());
         }
         return ausgabe.toString();
     }

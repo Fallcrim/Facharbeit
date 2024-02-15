@@ -16,7 +16,7 @@ class RSAHandlerTest {
     @org.junit.jupiter.api.Test
     void verschluesseln() {
         RSAHandler handler = new RSAHandler();
-        BigInteger[] schluesselPaar = handler.erstelleSchluesselPaar(16);
+        BigInteger[] schluesselPaar = handler.erstelleSchluesselPaar(4);
         BigInteger oSchluessel = schluesselPaar[0];
         BigInteger n = schluesselPaar[2];
         String vNachricht = handler.verschluesseln("Hello World!", oSchluessel, n);
@@ -27,7 +27,7 @@ class RSAHandlerTest {
     @org.junit.jupiter.api.Test
     void entschluesseln() {
         RSAHandler handler = new RSAHandler();
-        BigInteger[] schluesselPaar = handler.erstelleSchluesselPaar(16);
+        BigInteger[] schluesselPaar = handler.erstelleSchluesselPaar(8);
         BigInteger oSchluessel = schluesselPaar[0];
         BigInteger pSchluessel = schluesselPaar[1];
         BigInteger n = schluesselPaar[2];
@@ -35,6 +35,7 @@ class RSAHandlerTest {
         assertNotNull(vNachricht);
         String eNachricht = handler.entschluesseln(vNachricht, pSchluessel, n);
         assertNotNull(eNachricht);
+        assertEquals("Hello World!", eNachricht);
         System.out.println(eNachricht);
     }
 }
