@@ -1,9 +1,11 @@
 package main;
+import main.RSAHandler.SchluesselPaar;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -20,11 +22,15 @@ public class Server implements Runnable {
     private final ArrayList<ClientHandler> verbundeneClients;
     private final ArrayList<String> verwendeteNicks;
     private boolean serverAn;
+    private final RSAHandler rsaHandler;
+    private final SchluesselPaar schluesselPaar;
 
     public Server() {
         this.verbundeneClients = new ArrayList<>();
         this.verwendeteNicks = new ArrayList<>();
         this.serverAn = true;
+        this.rsaHandler = new RSAHandler();
+        this.schluesselPaar = rsaHandler.erstelleSchluesselPaar(32);
     }
 
     @Override
@@ -33,7 +39,7 @@ public class Server implements Runnable {
             this.serverSocket = new ServerSocket(2007);
             ExecutorService clientThreadPool = Executors.newCachedThreadPool();
             this.starteKonsole();
-            System.out.println("main.Server gestartet...");
+            System.out.println("Server gestartet...");
             while (this.serverAn) {
                 Socket neuerClient = this.serverSocket.accept();
                 ClientHandler neuerClientHandler = new ClientHandler(neuerClient);
@@ -41,7 +47,7 @@ public class Server implements Runnable {
                 clientThreadPool.execute(neuerClientHandler);
             }
         } catch (Exception e) {
-            herunterfahren("main.Server abgestürzt --> " + Arrays.toString(e.getStackTrace()));
+            herunterfahren("Server abgestürzt --> " + Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -62,7 +68,7 @@ public class Server implements Runnable {
         if (!this.serverSocket.isClosed()) {
             try {
                 this.serverAn = false;
-                this.sendeAnAlle("Der main.Server wird heruntergefahren. Grund: " + pGrund);
+                this.sendeAnAlle("Der Server wird heruntergefahren. Grund: " + pGrund);
                 for (ClientHandler alleClients : this.verbundeneClients) {
                     alleClients.verbindungSchliessen();
                 }
@@ -115,6 +121,8 @@ public class Server implements Runnable {
         private final Socket verbundenerClient;
         private BufferedReader eingehend;
         private PrintWriter ausgehend;
+        private BigInteger oeffentlicherSchluessel;
+        private BigInteger n;
 
         public ClientHandler(Socket pVerbundenerClient) {
             this.verbundenerClient = pVerbundenerClient;
@@ -126,6 +134,11 @@ public class Server implements Runnable {
                 this.ausgehend = new PrintWriter(this.verbundenerClient.getOutputStream(), true);
                 this.eingehend = new BufferedReader(new InputStreamReader(this.verbundenerClient.getInputStream()));
 
+                this.ausgehend.println("CFG%KEY%" + schluesselPaar.oeffentlicherSchluessel.toString());
+                String[] verschluesselungsDaten = this.eingehend.readLine().split("CFG%KEY%")[0].split("%");
+                this.oeffentlicherSchluessel = new BigInteger(verschluesselungsDaten[0]);
+                this.n = new BigInteger(verschluesselungsDaten[1]);
+
                 // Frage den client nach seinem gewünschten Nickname/Akronym
                 this.ausgehend.println("NICK");
                 String clientNickname = this.nicknameAnpassen(this.eingehend.readLine());
@@ -133,9 +146,12 @@ public class Server implements Runnable {
                     ausgehend.println("ERR%Nickname bereits in Verwendung! Wähle einen neuen.");
                     this.verbindungSchliessen();
                 }
+                verwendeteNicks.add(clientNickname);
                 System.out.println(clientNickname + " wurde mit dem Chat verbunden!");
+
                 // Kündige den neuen Benutzer im Chat an
                 sendeAnAlle(clientNickname + " ist dem Chat beigetreten.");
+
                 // Verarbeite neue Nachrichten des verbundenen Benutzers
                 String neueNachricht = this.eingehend.readLine();
                 while (neueNachricht != null) {
@@ -160,14 +176,15 @@ public class Server implements Runnable {
         }
 
         public void sendeNachricht(String pNachricht) {
-            this.ausgehend.println("MSG%" + pNachricht);
+            String vNachricht = rsaHandler.verschluesseln(pNachricht, this.oeffentlicherSchluessel, this.n);
+            this.ausgehend.println("MSG%" + vNachricht);
         }
 
         public void verbindungSchliessen() {
             if (!this.verbundenerClient.isClosed()) {
                 try {
-                    this.ausgehend.println("SIG%TERM"); // bringt den main.Client dazu, die Verbindung auf seiner Seite zu schließen
-                    // Schließen des main.Client Sockets & der In-/Output-Streams
+                    this.ausgehend.println("SIG%TERM"); // bringt den Client dazu, die Verbindung auf seiner Seite zu schließen
+                    // Schließen des main. Client Sockets & der In-/Output-Streams
                     this.verbundenerClient.close();
                     this.eingehend.close();
                     this.ausgehend.close();

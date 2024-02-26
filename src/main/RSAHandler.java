@@ -5,11 +5,24 @@ import java.util.Random;
 
 public class RSAHandler {
 
-    private static class SchluesselErzeuger {
+
+    public static class SchluesselPaar {
+        public BigInteger oeffentlicherSchluessel;
+        public BigInteger privaterSchluessel;
+        public BigInteger n;
+        public SchluesselPaar(BigInteger[] pSchluesselPaar) {
+            this.oeffentlicherSchluessel = pSchluesselPaar[0];
+            this.privaterSchluessel = pSchluesselPaar[1];
+            this.n = pSchluesselPaar[2];
+        }
+    }
+
+
+    private class SchluesselErzeuger {
         /*
         Diese Klasse erstellt die Schlüsselpaare für die Verschlüsselung des Chatrooms
          */
-        private BigInteger[] erstelleSchluesselPaar(int pLaengeInBits) {
+        private SchluesselPaar erstelleSchluesselPaar(int pLaengeInBits) {
             BigInteger p = zufaelligePrimzahl(pLaengeInBits);
             BigInteger q = zufaelligePrimzahl(pLaengeInBits);
             BigInteger n = p.multiply(q);
@@ -21,7 +34,7 @@ public class RSAHandler {
             BigInteger oeffentlicherSchluessel = generiereOeffentlichenSchluessel(phiN);
             BigInteger privaterSchluessel = oeffentlicherSchluessel.modInverse(phiN);
 
-            return new BigInteger[]{oeffentlicherSchluessel, privaterSchluessel, n};
+            return new SchluesselPaar(new BigInteger[]{oeffentlicherSchluessel, privaterSchluessel, n});
         }
 
         private BigInteger zufaelligePrimzahl(int pBitLaenge) {
@@ -104,7 +117,7 @@ public class RSAHandler {
         return ausgabe.toString();
     }
 
-    public BigInteger[] erstelleSchluesselPaar(int pLaengeInBits) {
+    public SchluesselPaar erstelleSchluesselPaar(int pLaengeInBits) {
         SchluesselErzeuger erzeuger = new SchluesselErzeuger();
         return erzeuger.erstelleSchluesselPaar(pLaengeInBits);
     }
