@@ -123,6 +123,7 @@ public class Server implements Runnable {
         private PrintWriter ausgehend;
         private BigInteger oeffentlicherSchluessel;
         private BigInteger n;
+        private String nickname;
 
         public ClientHandler(Socket pVerbundenerClient) {
             this.verbundenerClient = pVerbundenerClient;
@@ -134,8 +135,8 @@ public class Server implements Runnable {
                 this.ausgehend = new PrintWriter(this.verbundenerClient.getOutputStream(), true);
                 this.eingehend = new BufferedReader(new InputStreamReader(this.verbundenerClient.getInputStream()));
 
-                this.ausgehend.println("CFG%KEY%" + schluesselPaar.oeffentlicherSchluessel.toString());
-                String[] verschluesselungsDaten = this.eingehend.readLine().split("CFG%KEY%")[0].split("%");
+                this.ausgehend.println("CFG#KEY#" + schluesselPaar.oeffentlicherSchluessel.toString());
+                String[] verschluesselungsDaten = this.eingehend.readLine().split("CFG#KEY#")[0].split("#");
                 this.oeffentlicherSchluessel = new BigInteger(verschluesselungsDaten[0]);
                 this.n = new BigInteger(verschluesselungsDaten[1]);
 
@@ -143,10 +144,11 @@ public class Server implements Runnable {
                 this.ausgehend.println("NICK");
                 String clientNickname = this.nicknameAnpassen(this.eingehend.readLine());
                 if (verwendeteNicks.contains(clientNickname)) {
-                    ausgehend.println("ERR%Nickname bereits in Verwendung! Wähle einen neuen.");
+                    ausgehend.println("ERR#Nickname bereits in Verwendung! Wähle einen neuen.");
                     this.verbindungSchliessen();
                 }
                 verwendeteNicks.add(clientNickname);
+                this.nickname = clientNickname;
                 System.out.println(clientNickname + " wurde mit dem Chat verbunden!");
 
                 // Kündige den neuen Benutzer im Chat an
@@ -176,14 +178,14 @@ public class Server implements Runnable {
         }
 
         public void sendeNachricht(String pNachricht) {
-            String vNachricht = rsaHandler.verschluesseln(pNachricht, this.oeffentlicherSchluessel, this.n);
-            this.ausgehend.println("MSG%" + vNachricht);
+            String vNachricht = rsaHandler.verschluesseln(this.nickname + ": " + pNachricht, this.oeffentlicherSchluessel, this.n);
+            this.ausgehend.println("MSG#" + vNachricht);
         }
 
         public void verbindungSchliessen() {
             if (!this.verbundenerClient.isClosed()) {
                 try {
-                    this.ausgehend.println("SIG%TERM"); // bringt den Client dazu, die Verbindung auf seiner Seite zu schließen
+                    this.ausgehend.println("SIG#TERM"); // bringt den Client dazu, die Verbindung auf seiner Seite zu schließen
                     // Schließen des main. Client Sockets & der In-/Output-Streams
                     this.verbundenerClient.close();
                     this.eingehend.close();
