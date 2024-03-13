@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,6 +21,7 @@ public class Client implements Runnable {
     private RSAHandler rsaHandler;
     private SchluesselPaar schluesselPaar;
     private BigInteger serverOeffentlicherSchluessel;
+    private BigInteger serverN;
 
     @Override
     public void run() {
@@ -44,16 +46,22 @@ public class Client implements Runnable {
         @Override
         public void run() {
             try {
-                BufferedReader eingabeLeser = new BufferedReader(new InputStreamReader(System.in));
+                Scanner eingabeLeser = new Scanner(System.in);
 
-                String serverEinstellung = eingehend.readLine().split("#")[2];
-                serverOeffentlicherSchluessel = new BigInteger(serverEinstellung);
-                System.out.println("serverEinstellung = " + serverEinstellung);
+                String[] serverEinstellung = eingehend.readLine().split("#");
+                serverOeffentlicherSchluessel = new BigInteger(serverEinstellung[2]);
+                serverN = new BigInteger(serverEinstellung[3]);
+                System.out.println("Server Public Key = " + serverEinstellung[2]);
+                System.out.println("Server N value = " + serverEinstellung[3]);
 
                 ausgehend.println("CFG#KEY#" + schluesselPaar.oeffentlicherSchluessel + "#" + schluesselPaar.n);
 
+                System.out.print("Nickname: ");
+                String clientNickname = eingabeLeser.nextLine();
+                ausgehend.println(clientNickname);
+
                 while (clientAktiv) {
-                    String nachricht = eingabeLeser.readLine();
+                    String nachricht = eingabeLeser.nextLine();
                     String verschluesselteNachricht = rsaHandler.verschluesseln(nachricht, serverOeffentlicherSchluessel, schluesselPaar.n);
                     ausgehend.println("MSG#" + verschluesselteNachricht);
                 }

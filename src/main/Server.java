@@ -56,10 +56,10 @@ public class Server implements Runnable {
         konsolenThread.start();
     }
 
-    public void sendeAnAlle(String pNachricht) {
+    public void sendeAnAlle(String pNachricht, String senderNickname) {
         for (ClientHandler alleHandler : this.verbundeneClients) {
             if (alleHandler != null) {
-                alleHandler.sendeNachricht(pNachricht);
+                alleHandler.sendeNachricht(senderNickname + " : " + pNachricht);
             }
         }
     }
@@ -68,7 +68,7 @@ public class Server implements Runnable {
         if (!this.serverSocket.isClosed()) {
             try {
                 this.serverAn = false;
-                this.sendeAnAlle("Der Server wird heruntergefahren. Grund: " + pGrund);
+                this.sendeAnAlle("Der Server wird heruntergefahren. Grund: " + pGrund, "[SERVER]");
                 for (ClientHandler alleClients : this.verbundeneClients) {
                     alleClients.verbindungSchliessen();
                 }
@@ -135,13 +135,12 @@ public class Server implements Runnable {
                 this.ausgehend = new PrintWriter(this.verbundenerClient.getOutputStream(), true);
                 this.eingehend = new BufferedReader(new InputStreamReader(this.verbundenerClient.getInputStream()));
 
-                this.ausgehend.println("CFG#KEY#" + schluesselPaar.oeffentlicherSchluessel.toString());
-                String[] verschluesselungsDaten = this.eingehend.readLine().split("CFG#KEY#")[0].split("#");
-                this.oeffentlicherSchluessel = new BigInteger(verschluesselungsDaten[0]);
-                this.n = new BigInteger(verschluesselungsDaten[1]);
+                this.ausgehend.println("CFG#KEY#" + schluesselPaar.oeffentlicherSchluessel + "#" + schluesselPaar.n);
+                String[] verschluesselungsDaten = this.eingehend.readLine().split("#");
+                this.oeffentlicherSchluessel = new BigInteger(verschluesselungsDaten[2]);
+                this.n = new BigInteger(verschluesselungsDaten[3]);
 
                 // Frage den client nach seinem gewünschten Nickname/Akronym
-                this.ausgehend.println("NICK");
                 String clientNickname = this.nicknameAnpassen(this.eingehend.readLine());
                 if (verwendeteNicks.contains(clientNickname)) {
                     ausgehend.println("ERR#Nickname bereits in Verwendung! Wähle einen neuen.");
@@ -152,17 +151,17 @@ public class Server implements Runnable {
                 System.out.println(clientNickname + " wurde mit dem Chat verbunden!");
 
                 // Kündige den neuen Benutzer im Chat an
-                sendeAnAlle(clientNickname + " ist dem Chat beigetreten.");
+                sendeAnAlle(clientNickname + " ist dem Chat beigetreten.", "[SERVER]");
 
                 // Verarbeite neue Nachrichten des verbundenen Benutzers
                 String neueNachricht = this.eingehend.readLine();
                 while (neueNachricht != null) {
                     if (neueNachricht.equals("/quit")) { // Befehl, wenn der Nutzer den Chat verlässt
                         this.verbindungSchliessen();
-                        sendeAnAlle(clientNickname + " hat den Chat verlassen.");
+                        sendeAnAlle(clientNickname + " hat den Chat verlassen.", "[SERVER]");
                         return;
                     } else {
-                        sendeAnAlle(neueNachricht);
+                        sendeAnAlle(neueNachricht, nickname);
                     }
                     neueNachricht = this.eingehend.readLine();
                 }
