@@ -1,6 +1,6 @@
 package main;
 
-import main.RSAHandler;
+import main.RSAHandler.SchluesselPaar;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class Client implements Runnable {
     private PrintWriter ausgehend;
     private boolean clientAktiv;
     private RSAHandler rsaHandler;
-    private RSAHandler.SchluesselPaar schluesselPaar;
+    private SchluesselPaar schluesselPaar;
 
     @Override
     public void run() {
