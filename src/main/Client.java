@@ -1,6 +1,6 @@
 package main;
 
-import main.RSAHandler.SchluesselPaar;
+import main.RSAHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,9 +19,7 @@ public class Client implements Runnable {
     private PrintWriter ausgehend;
     private boolean clientAktiv;
     private RSAHandler rsaHandler;
-    private SchluesselPaar schluesselPaar;
-    private BigInteger serverOeffentlicherSchluessel;
-    private BigInteger serverN;
+    private RSAHandler.SchluesselPaar schluesselPaar;
 
     @Override
     public void run() {
@@ -31,6 +29,7 @@ public class Client implements Runnable {
             this.eingehend = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.rsaHandler = new RSAHandler();
             this.schluesselPaar = rsaHandler.erstelleSchluesselPaar(32);
+            this.clientAktiv = true;
 
             ExecutorService handlerThreadPool = Executors.newCachedThreadPool();
             EingabeHandler eingabeHandler = new EingabeHandler();
@@ -49,10 +48,12 @@ public class Client implements Runnable {
                 Scanner eingabeLeser = new Scanner(System.in);
 
                 String[] serverEinstellung = eingehend.readLine().split("#");
-                serverOeffentlicherSchluessel = new BigInteger(serverEinstellung[2]);
-                serverN = new BigInteger(serverEinstellung[3]);
-                System.out.println("Server Public Key = " + serverEinstellung[2]);
-                System.out.println("Server N value = " + serverEinstellung[3]);
+
+                BigInteger serverOeffentlicherSchluessel = new BigInteger(serverEinstellung[2]);
+                BigInteger serverN = new BigInteger(serverEinstellung[3]);
+
+//                System.out.println("Server Public Key = " + serverEinstellung[2]);
+//                System.out.println("Server N value = " + serverEinstellung[3]);
 
                 ausgehend.println("CFG#KEY#" + schluesselPaar.oeffentlicherSchluessel + "#" + schluesselPaar.n);
 
@@ -62,7 +63,7 @@ public class Client implements Runnable {
 
                 while (clientAktiv) {
                     String nachricht = eingabeLeser.nextLine();
-                    String verschluesselteNachricht = rsaHandler.verschluesseln(nachricht, serverOeffentlicherSchluessel, schluesselPaar.n);
+                    String verschluesselteNachricht = rsaHandler.verschluesseln(nachricht, serverOeffentlicherSchluessel, serverN);
                     ausgehend.println("MSG#" + verschluesselteNachricht);
                 }
             } catch (IOException e) {

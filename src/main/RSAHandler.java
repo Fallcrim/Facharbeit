@@ -18,7 +18,7 @@ public class RSAHandler {
     }
 
 
-    private class SchluesselErzeuger {
+    private static class SchluesselErzeuger {
         /*
         Diese Klasse erstellt die Schlüsselpaare für die Verschlüsselung des Chatrooms
          */
@@ -69,8 +69,7 @@ public class RSAHandler {
             if (moduloBigInteger(pZahl, 2).compareTo(BigInteger.ZERO) == 0 || moduloBigInteger(pZahl, 3).compareTo(BigInteger.ZERO) == 0) {
                 return false;
             }
-            BigInteger quadratWurzel = pZahl.sqrt();
-            for (int zaehler = 5; quadratWurzel.compareTo(BigInteger.valueOf(zaehler)) > 0; zaehler += 6) {
+            for (int zaehler = 5; pZahl.sqrt().compareTo(BigInteger.valueOf(zaehler)) > 0; zaehler += 6) {
                 if (moduloBigInteger(pZahl, zaehler).compareTo(BigInteger.ZERO) == 0 || moduloBigInteger(pZahl, zaehler + 2).compareTo(BigInteger.ZERO) == 0) {
                     return false;
                 }
