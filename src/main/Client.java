@@ -20,6 +20,8 @@ public class Client implements Runnable {
     private boolean clientAktiv;
     private RSAHandler rsaHandler;
     private SchluesselPaar schluesselPaar;
+    private BigInteger serverOeffentlicherSchluessel;
+    private BigInteger serverN;
 
     @Override
     public void run() {
@@ -28,7 +30,9 @@ public class Client implements Runnable {
             this.ausgehend = new PrintWriter(clientSocket.getOutputStream(), true);
             this.eingehend = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.rsaHandler = new RSAHandler();
-            this.schluesselPaar = rsaHandler.erstelleSchluesselPaar(32);
+            this.schluesselPaar = rsaHandler.erstelleSchluesselPaar(8);
+            System.out.println("pschluessel = " + schluesselPaar.oeffentlicherSchluessel);
+            System.out.println("n = " + schluesselPaar.n);
             this.clientAktiv = true;
 
             ExecutorService handlerThreadPool = Executors.newCachedThreadPool();
@@ -44,30 +48,20 @@ public class Client implements Runnable {
     private class EingabeHandler implements Runnable {
         @Override
         public void run() {
-            try {
-                Scanner eingabeLeser = new Scanner(System.in);
+            /*
 
-                String[] serverEinstellung = eingehend.readLine().split("#");
+             */
+            Scanner eingabeLeser = new Scanner(System.in);
 
-                BigInteger serverOeffentlicherSchluessel = new BigInteger(serverEinstellung[2]);
-                BigInteger serverN = new BigInteger(serverEinstellung[3]);
+            System.out.print("Nickname: ");
+            String clientNickname = eingabeLeser.nextLine();
+//            ausgehend.println("CFG#NCK#" + clientNickname);
+            ausgehend.println(clientNickname);
 
-//                System.out.println("Server Public Key = " + serverEinstellung[2]);
-//                System.out.println("Server N value = " + serverEinstellung[3]);
-
-                ausgehend.println("CFG#KEY#" + schluesselPaar.oeffentlicherSchluessel + "#" + schluesselPaar.n);
-
-                System.out.print("Nickname: ");
-                String clientNickname = eingabeLeser.nextLine();
-                ausgehend.println(clientNickname);
-
-                while (clientAktiv) {
-                    String nachricht = eingabeLeser.nextLine();
-                    String verschluesselteNachricht = rsaHandler.verschluesseln(nachricht, serverOeffentlicherSchluessel, serverN);
-                    ausgehend.println("MSG#" + verschluesselteNachricht);
-                }
-            } catch (IOException e) {
-                // TODO: verarbeiten
+            while (clientAktiv) {
+                String nachricht = eingabeLeser.nextLine();
+                String verschluesselteNachricht = rsaHandler.verschluesseln(nachricht, serverOeffentlicherSchluessel, serverN);
+                ausgehend.println("MSG#" + verschluesselteNachricht);
             }
         }
     }
@@ -78,8 +72,39 @@ public class Client implements Runnable {
             try {
                 BufferedReader serverAusgabeLeser = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 while (clientAktiv) {
-                    String entschluesselteNachricht = rsaHandler.entschluesseln(serverAusgabeLeser.readLine(), schluesselPaar.privaterSchluessel, schluesselPaar.n);
-                    System.out.println(entschluesselteNachricht);
+                    String empfangeneNachricht = serverAusgabeLeser.readLine();
+                    if (empfangeneNachricht.startsWith("CFG#")) {
+                        // Konfiguration des Schlüsselaustauschs
+                        String[] serverEinstellung = empfangeneNachricht.split("#");
+
+                        serverOeffentlicherSchluessel = new BigInteger(serverEinstellung[2]);
+                        serverN = new BigInteger(serverEinstellung[3]);
+                        System.out.println("serverEinstellung pkey = " + serverEinstellung[2]);
+                        System.out.println("serverEinstellung n = " + serverEinstellung[3]);
+                        System.out.println("Server Schlüssel erhalten!");
+
+                        ausgehend.println("CFG#KEY#" + schluesselPaar.oeffentlicherSchluessel + "#" + schluesselPaar.n);
+                    }
+                    String[] nachrichtElemente = empfangeneNachricht.split("#", 2);
+                    if (nachrichtElemente[0].equals("MSG")) {
+                        // Verarbeitung einer Textnachricht
+                        if (nachrichtElemente[1].startsWith("TEST")) {
+                            System.out.println(nachrichtElemente[1]);
+                            continue;
+                        }
+                        String entschluesselteNachricht = rsaHandler.entschluesseln(nachrichtElemente[1], schluesselPaar.privaterSchluessel, schluesselPaar.n);
+                        System.out.println(entschluesselteNachricht);
+                    } else if (nachrichtElemente[0].equals("SIG")) {
+                        // Verarbeitung von Signalen des Servers
+                        if (nachrichtElemente[1].equals("TERM")) {
+                            // Client stoppt
+                            clientAktiv = false;
+                            clientSocket.close();
+                            eingehend.close();
+                            ausgehend.close();
+                            System.exit(1);
+                        }
+                    }
                 }
             } catch (IOException e) {
                 // ignorieren

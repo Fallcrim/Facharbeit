@@ -8,14 +8,14 @@ class RSAHandlerTest {
     @org.junit.jupiter.api.Test
     void erstelleSchluesselPaar() {
         RSAHandler handler = new RSAHandler();
-        SchluesselPaar schluesselPaar = handler.erstelleSchluesselPaar(16);
+        SchluesselPaar schluesselPaar = handler.erstelleSchluesselPaar(32);
         assertNotNull(schluesselPaar);
     }
 
     @org.junit.jupiter.api.Test
     void verschluesseln() {
         RSAHandler handler = new RSAHandler();
-        SchluesselPaar schluesselPaar = handler.erstelleSchluesselPaar(4);
+        SchluesselPaar schluesselPaar = handler.erstelleSchluesselPaar(32);
         String vNachricht = handler.verschluesseln("Hello World!", schluesselPaar.oeffentlicherSchluessel, schluesselPaar.n);
         assertNotNull(vNachricht);
         System.out.println(vNachricht);
@@ -24,12 +24,15 @@ class RSAHandlerTest {
     @org.junit.jupiter.api.Test
     void entschluesseln() {
         RSAHandler handler = new RSAHandler();
-        SchluesselPaar schluesselPaar = handler.erstelleSchluesselPaar(8);
-        String vNachricht = handler.verschluesseln("Hello World!", schluesselPaar.oeffentlicherSchluessel, schluesselPaar.n);
+        SchluesselPaar schluesselPaar = handler.erstelleSchluesselPaar(16);
+        System.out.println("schluesselPaar.oeffentlicherSchluessel = " + schluesselPaar.oeffentlicherSchluessel);
+        System.out.println("schluesselPaar.privaterSchluessel = " + schluesselPaar.privaterSchluessel);
+        String vNachricht = handler.verschluesseln("abcdefghijklmnopqrstuvwxyz", schluesselPaar.oeffentlicherSchluessel, schluesselPaar.n);
+        System.out.println("vNachricht = " + vNachricht);
         assertNotNull(vNachricht);
         String eNachricht = handler.entschluesseln(vNachricht, schluesselPaar.privaterSchluessel, schluesselPaar.n);
         assertNotNull(eNachricht);
-        assertEquals("Hello World!", eNachricht);
-        System.out.println(eNachricht);
+        assertEquals("abcdefghijklmnopqrstuvwxyz", eNachricht);
+        System.out.println("eNachricht = " + eNachricht);
     }
 }
