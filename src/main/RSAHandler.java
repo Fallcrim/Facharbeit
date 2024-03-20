@@ -10,6 +10,7 @@ public class RSAHandler {
         public BigInteger oeffentlicherSchluessel;
         public BigInteger privaterSchluessel;
         public BigInteger n;
+
         public SchluesselPaar(BigInteger[] pSchluesselPaar) {
             this.oeffentlicherSchluessel = pSchluesselPaar[0];
             this.privaterSchluessel = pSchluesselPaar[1];
@@ -20,7 +21,7 @@ public class RSAHandler {
 
     private static class SchluesselErzeuger {
         /*
-        Diese Klasse erstellt die Schlüsselpaare für die Verschlüsselung des Chatrooms
+        Diese Klasse stellt die Schlüsselpaare für die Verschlüsselung des Chatrooms dar
          */
         private SchluesselPaar erstelleSchluesselPaar(int pLaengeInBits) {
             BigInteger p = zufaelligePrimzahl(pLaengeInBits);
@@ -38,6 +39,9 @@ public class RSAHandler {
         }
 
         private BigInteger zufaelligePrimzahl(int pBitLaenge) {
+            /*
+            Generiert eine zufällige Primzahl mit der Größe pBitLaenge
+             */
             Random generator = new Random();
             BigInteger primzahl = BigInteger.probablePrime(pBitLaenge, generator);
             while (!istPrimzahl(primzahl)) {
@@ -47,6 +51,9 @@ public class RSAHandler {
         }
 
         public BigInteger zufaelligerBigInteger(BigInteger min, BigInteger max) {
+            /*
+            Generiert einen zufälligen BigInteger im gegebenen Interval
+             */
             Random generator = new Random();
             BigInteger ergebnis = new BigInteger(max.bitLength(), generator);
             while (ergebnis.compareTo(max) >= 0 && ergebnis.compareTo(min) <= 0) {
@@ -56,13 +63,16 @@ public class RSAHandler {
         }
 
         private BigInteger moduloBigInteger(BigInteger a, int b) {
+            /*
+            Modulo-Operation für einen BigInteger und einen Integer
+             */
             return a.mod(BigInteger.valueOf(b));
         }
 
         private boolean istPrimzahl(BigInteger pZahl) {
-        /*
-        Prüft, ob eine gegebene Zahl eine Primzahl ist
-         */
+            /*
+            Prüft, ob eine gegebene Zahl eine Primzahl ist
+             */
             if (pZahl.compareTo(BigInteger.valueOf(3)) <= 0) {
                 return false;
             }
@@ -96,9 +106,10 @@ public class RSAHandler {
          */
         StringBuilder ausgabe = new StringBuilder();
         for (int i = 0; i < pNachricht.length(); i++) {
-            char nvBuchstabe = pNachricht.charAt(i);
-            BigInteger vBuchstabe = BigInteger.valueOf(nvBuchstabe).modPow(pOeffentlicherSchluessel, pN);
-            ausgabe.append((char) vBuchstabe.intValue());
+            char c = pNachricht.charAt(i);
+            BigInteger m = BigInteger.valueOf((int) c);
+            BigInteger vBuchstabeASCII = m.modPow(pOeffentlicherSchluessel, pN);
+            ausgabe.append(vBuchstabeASCII.intValue()).append(" ");
         }
         return ausgabe.toString();
     }
@@ -108,15 +119,20 @@ public class RSAHandler {
         Entschlüsselt eine Nachricht mit dem RSA Algorithmus
          */
         StringBuilder ausgabe = new StringBuilder();
-        for (int i = 0; i < pVerschluesselteNachricht.length(); i++) {
-            char vBuchstabe = pVerschluesselteNachricht.charAt(i);
-            BigInteger nvBuchstabe = BigInteger.valueOf(vBuchstabe).modPow(pPrivaterSchluessel, pN);
-            ausgabe.append((char) nvBuchstabe.intValue());
+        String[] vBuchstaben = pVerschluesselteNachricht.split(" ");
+        for (String vBuchstabe : vBuchstaben) {
+            BigInteger vBuchstabeASCII = new BigInteger(vBuchstabe).abs();
+            BigInteger eBuchstabeASCII = vBuchstabeASCII.modPow(pPrivaterSchluessel, pN);
+            char eBuchstabe = (char) eBuchstabeASCII.intValue();
+            ausgabe.append(eBuchstabe);
         }
         return ausgabe.toString();
     }
 
     public SchluesselPaar erstelleSchluesselPaar(int pLaengeInBits) {
+        /*
+        Erstellt ein Schlüsselpaar mit Schlüsseln der Länge pLaengeInBits
+         */
         SchluesselErzeuger erzeuger = new SchluesselErzeuger();
         return erzeuger.erstelleSchluesselPaar(pLaengeInBits);
     }

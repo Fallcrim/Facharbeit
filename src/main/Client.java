@@ -48,9 +48,6 @@ public class Client implements Runnable {
     private class EingabeHandler implements Runnable {
         @Override
         public void run() {
-            /*
-
-             */
             Scanner eingabeLeser = new Scanner(System.in);
 
             System.out.print("Nickname: ");
@@ -59,6 +56,7 @@ public class Client implements Runnable {
             ausgehend.println(clientNickname);
 
             while (clientAktiv) {
+                // Hauptschleife des Clients
                 String nachricht = eingabeLeser.nextLine();
                 String verschluesselteNachricht = rsaHandler.verschluesseln(nachricht, serverOeffentlicherSchluessel, serverN);
                 ausgehend.println("MSG#" + verschluesselteNachricht);

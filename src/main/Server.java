@@ -58,11 +58,17 @@ public class Server implements Runnable {
     }
 
     private void starteKonsole() {
+        /*
+        Startet die serverseitige Konsole
+         */
         Thread konsolenThread = new Thread(new Konsole());
         konsolenThread.start();
     }
 
     public void sendeAnAlle(String pNachricht, String senderNickname) {
+        /*
+        Sendet eine Nachricht verschlüsselt an alle Clients
+         */
         for (ClientHandler alleHandler : this.verbundeneClients) {
             if (alleHandler != null) {
                 alleHandler.sendeNachricht(senderNickname + " : " + pNachricht);
@@ -112,7 +118,7 @@ public class Server implements Runnable {
                             System.out.println("Nickname ist nicht verbunden!");
                         }
                     } else if (eingegebenerBefehl.equals("herunterfahren")) {
-                        herunterfahren("main.Server wurde von einem Administrator heruntergefahren.");
+                        herunterfahren("Server wurde von einem Administrator heruntergefahren.");
                         serverAn = false;
                     }
                 } catch (Exception e) {
@@ -164,11 +170,13 @@ public class Server implements Runnable {
                 while (neueNachricht != null) {
                     String[] nachrichtElemente = neueNachricht.split("#", 2);
                     if (nachrichtElemente[0].equals("MSG")) {
+                        // verarbeitet die Information als Textnachricht
                         String entschluesselteNeueNachricht = rsaHandler.entschluesseln(nachrichtElemente[1], schluesselPaar.privaterSchluessel, schluesselPaar.n);
                         if (entschluesselteNeueNachricht.equals("/quit")) {
                             sendeAnAlle(clientNickname + " verlässt den Chat.", "[SERVER]");
                             verbindungSchliessen();
                         } else if (entschluesselteNeueNachricht.equals("%TST%")) {
+                            // sendet unverschlüsselte Testnachricht; Demo Zweck
                             sendeRoheNachricht("MSG#TEST! Dies ist eine Testnachricht! Sie ist unverschlüsselt!");
                         }
                         sendeAnAlle(entschluesselteNeueNachricht, clientNickname);
@@ -205,6 +213,9 @@ public class Server implements Runnable {
         }
 
         public void verbindungSchliessen() {
+            /*
+            Schließt die Verbindung zum Client und schließt ebenso den In- und Output-Stream
+             */
             if (!this.verbundenerClient.isClosed()) {
                 try {
                     sendeRoheNachricht("SIG#TERM"); // bringt den Client dazu, die Verbindung auf seiner Seite zu schließen
